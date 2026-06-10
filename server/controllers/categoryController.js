@@ -1,12 +1,9 @@
-import Category from "../models/Category.js";
+import Category from '../models/Category.js';
 
 // @GET /api/categories
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({
-      order: 1,
-      name: 1,
-    });
+    const categories = await Category.find({ isActive: true }).sort({ order: 1, name: 1 });
     res.json(categories);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -17,8 +14,7 @@ export const getCategories = async (req, res) => {
 export const getCategoryBySlug = async (req, res) => {
   try {
     const category = await Category.findOne({ slug: req.params.slug });
-    if (!category)
-      return res.status(404).json({ message: "Kategori bulunamadı" });
+    if (!category) return res.status(404).json({ message: 'Kategori bulunamadı' });
     res.json(category);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -38,12 +34,8 @@ export const createCategory = async (req, res) => {
 // @PUT /api/categories/:id  [admin]
 export const updateCategory = async (req, res) => {
   try {
-    const category = await Category.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!category)
-      return res.status(404).json({ message: "Kategori bulunamadı" });
+    const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!category) return res.status(404).json({ message: 'Kategori bulunamadı' });
     res.json(category);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -54,9 +46,8 @@ export const updateCategory = async (req, res) => {
 export const deleteCategory = async (req, res) => {
   try {
     const category = await Category.findByIdAndDelete(req.params.id);
-    if (!category)
-      return res.status(404).json({ message: "Kategori bulunamadı" });
-    res.json({ message: "Kategori silindi" });
+    if (!category) return res.status(404).json({ message: 'Kategori bulunamadı' });
+    res.json({ message: 'Kategori silindi' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
