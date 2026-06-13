@@ -5,10 +5,48 @@ import api from '../services/api.js';
 import ProductCard from '../components/ui/ProductCard.jsx';
 import './Home.css';
 
+const heroSlides = [
+  {
+    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=900&q=80',
+    tag:   '✦ Yeni Koleksiyon 2025',
+    title: 'Her Anın\nVazgeçilmezi',
+    desc:  'El işçiliğiyle üretilmiş, özgün tasarımlı çanta koleksiyonumuzu keşfedin.'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=80',
+    tag:   '✦ Öne Çıkan Modeller',
+    title: 'Şıklığın\nYeni Adresi',
+    desc:  'Her kombine uyan çapraz çantalarımızla tarzınızı tamamlayın.'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=900&q=80',
+    tag:   '✦ Premium Koleksiyon',
+    title: 'Kalite &\nZarif Tasarım',
+    desc:  'Gerçek deri sırt çantalarımızla her yerde fark yaratın.'
+  },
+];
+
 const Home = () => {
   const [featured,   setFeatured]   = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading,    setLoading]    = useState(true);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [prevSlide,   setPrevSlide]   = useState(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveSlide(curr => {
+        setPrevSlide(curr);
+        return (curr + 1) % heroSlides.length;
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const goToSlide = (i) => {
+    setPrevSlide(activeSlide);
+    setActiveSlide(i);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,25 +69,44 @@ const Home = () => {
   return (
     <div className="home">
 
-      {/* ── HERO ── */}
+      {/* ── HERO SLIDER ── */}
       <section className="hero">
-        <div className="hero-content">
-          <span className="hero-tag">✦ Yeni Koleksiyon 2025</span>
-          <h1 className="hero-title">Her Anın<br />Vazgeçilmezi</h1>
-          <p className="hero-desc">
-            El işçiliğiyle üretilmiş, özgün tasarımlı çanta koleksiyonumuzu keşfedin.
-            Stilinizi yansıtın, farkınızı ortaya koyun.
-          </p>
-          <div className="hero-btns">
-            <Link to="/urunler" className="btn btn-primary btn-lg">Koleksiyonu Keşfet</Link>
-            <Link to="/urunler?featured=true" className="btn btn-outline btn-lg">Öne Çıkanlar</Link>
-          </div>
-        </div>
+        {/* Görseller */}
         <div className="hero-image">
-          <img src="/hero.jpg" alt="Çanta Dolusu Koleksiyon" />
+          {heroSlides.map((slide, i) => (
+            <div
+              key={i}
+              className={`hero-slide${i === activeSlide ? ' active' : ''}${i === prevSlide ? ' prev' : ''}`}
+            >
+              <img src={slide.image} alt={slide.title} />
+            </div>
+          ))}
+
           <div className="hero-badge">
             <span className="badge-number">500+</span>
             <span className="badge-label">Mutlu Müşteri</span>
+          </div>
+
+          {/* Dots */}
+          <div className="hero-dots">
+            {heroSlides.map((_, i) => (
+              <button key={i} className={`hero-dot${i === activeSlide ? ' active' : ''}`} onClick={() => goToSlide(i)} />
+            ))}
+          </div>
+        </div>
+
+        {/* İçerik */}
+        <div className="hero-content">
+          {heroSlides.map((slide, i) => (
+            <div key={i} className={`hero-text${i === activeSlide ? ' active' : ''}`}>
+              <span className="hero-tag">{slide.tag}</span>
+              <h1 className="hero-title">{slide.title.split('\n').map((line, j) => <span key={j}>{line}<br /></span>)}</h1>
+              <p className="hero-desc">{slide.desc}</p>
+            </div>
+          ))}
+          <div className="hero-btns">
+            <Link to="/urunler" className="btn btn-primary btn-lg">Koleksiyonu Keşfet</Link>
+            <Link to="/urunler?featured=true" className="btn btn-outline btn-lg">Öne Çıkanlar</Link>
           </div>
         </div>
       </section>

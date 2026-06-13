@@ -1,95 +1,80 @@
 import { useState, useEffect } from 'react';
-import AdminLayout from './AdminLayout';
-import api from '../../services/api';
-import { toast } from 'react-toastify';
-import { useAuth } from '../../context/AuthContext';
+import { FiTrash2, FiShield } from 'react-icons/fi';
+import api from '../../services/api.js';
+import toast from 'react-hot-toast';
 
-export default function AdminUsers() {
-  const [users, setUsers] = useState([]);
+const Users = () => {
+  const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user: currentUser } = useAuth();
+  const [search,  setSearch]  = useState('');
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get('/users');
-      setUsers(data);
-    } finally {
-      setLoading(false);
-    }
+      const { data } = await api.get(`/users${search ? `?search=${search}` : ''}`);
+      setUsers(data.users);
+    } catch { toast.error('Yüklenemedi'); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(); }, [search]);
+
+  const handleRoleToggle = async (user) => {
+    const newRole = user.role === 'admin' ? 'user' : 'admin';
+    if (!confirm(`${user.name} kullanıcısını ${newRole === 'admin' ? 'admin yap' : 'adminlikten çıkar'}?`)) return;
+    try {
+      await api.put(`/users/${user._id}/role`, { role: newRole });
+      toast.success('Rol güncellendi');
+      fetchUsers();
+    } catch { toast.error('Hata'); }
+  };
 
   const handleDelete = async (id) => {
-    if (id === currentUser._id) return toast.error('Kendinizi silemezsiniz');
-    if (!window.confirm('Bu kullanıcıyı silmek istiyor musunuz?')) return;
-    try {
-      await api.delete(`/users/${id}`);
-      toast.success('Kullanıcı silindi');
-      fetchUsers();
-    } catch {
-      toast.error('Silme hatası');
-    }
-  };
-
-  const handleToggleAdmin = async (u) => {
-    if (u._id === currentUser._id) return toast.error('Kendi yetkinizi değiştiremezsiniz');
-    try {
-      await api.put(`/users/${u._id}`, { ...u, isAdmin: !u.isAdmin });
-      toast.success('Yetki güncellendi');
-      fetchUsers();
-    } catch {
-      toast.error('Güncelleme hatası');
-    }
+    if (!confirm('Kullanıcıyı silmek istediğinizden emin misiniz?')) return;
+    try { await api.delete(`/users/${id}`); toast.success('Silindi'); fetchUsers(); }
+    catch { toast.error('Silinemedi'); }
   };
 
   return (
-    <AdminLayout title="Kullanıcı Yönetimi">
-      {loading ? <div className="loading">Yükleniyor...</div> : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Ad Soyad</th>
-              <th>Email</th>
-              <th>Rol</th>
-              <th>Kayıt Tarihi</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u._id}>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td>
-                  <span className={`badge ${u.isAdmin ? 'badge-primary' : 'badge-success'}`}>
-                    {u.isAdmin ? '🛡️ Admin' : '👤 Kullanıcı'}
-                  </span>
-                </td>
-                <td>{new Date(u.createdAt).toLocaleDateString('tr-TR')}</td>
-                <td>
-                  <div className="admin-actions">
-                    <button
-                      className="btn-outline"
-                      onClick={() => handleToggleAdmin(u)}
-                      disabled={u._id === currentUser._id}
-                    >
-                      {u.isAdmin ? 'Yetkiyi Al' : 'Admin Yap'}
-                    </button>
-                    <button
-                      className="btn-danger"
-                      onClick={() => handleDelete(u._id)}
-                      disabled={u._id === currentUser._id}
-                    >
-                      Sil
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </AdminLayout>
+    <div>
+      <h1 className="admin-page-title">Kullanıcılar</h1>
+
+      <div style={{ marginBottom: 20, maxWidth: 320 }}>
+        <input className="form-control" placeholder="Ad veya e-posta ara..." value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
+      <div className="admin-card" style={{ padding: 0, overflow: 'auto' }}>
+        {loading ? <div className="spinner" style={{ margin: 40 }} /> : (
+          <table className="admin-table">
+            <thead><tr><th>Ad</th><th>E-posta</th><th>Telefon</th><th>Rol</th><th>Kayıt Tarihi</th><th>İşlem</th></tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u._id}>
+                  <td><strong>{u.name}</strong></td>
+                  <td style={{ color: 'var(--text-muted)' }}>{u.email}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{u.phone || '—'}</td>
+                  <td>
+                    <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, fontWeight: 600,
+                      background: u.role === 'admin' ? 'rgba(201,168,76,0.15)' : 'var(--cream)',
+                      color: u.role === 'admin' ? 'var(--gold-dark)' : 'var(--text-muted)' }}>
+                      {u.role === 'admin' ? '★ Admin' : 'Üye'}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{new Date(u.createdAt).toLocaleDateString('tr-TR')}</td>
+                  <td>
+                    <div className="admin-actions">
+                      <button className="btn-icon" title={u.role === 'admin' ? 'Adminliği kaldır' : 'Admin yap'} onClick={() => handleRoleToggle(u)}><FiShield /></button>
+                      <button className="btn-icon danger" onClick={() => handleDelete(u._id)}><FiTrash2 /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
   );
-}
+};
+
+export default Users;

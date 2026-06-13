@@ -1,113 +1,30 @@
-/* ── KUPON YÖNETİMİ ÖZEL STİLLERİ ──────────────────────── */
-.coupon-admin {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
 .coupon-form {
-  padding: 24px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.coupon-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin: 20px 0;
 }
-
-/* ── KUPON TABLOSU ─────────────────────────────────────── */
-.coupon-list {
-  background: var(--white);
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+.coupon-list { display: flex; flex-direction: column; gap: 12px; }
+.coupon-card {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 18px 20px;
+  display: flex; align-items: center; gap: 24px;
+  transition: box-shadow var(--transition);
 }
-
-.coupon-table {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.coupon-thead,
-.coupon-row {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1.2fr 1fr 0.5fr;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.coupon-thead {
-  font-weight: 600;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-}
-
-.coupon-row {
-  border-bottom: 1px solid var(--border);
-  transition: background var(--transition);
-}
-
-.coupon-row:hover {
-  background: var(--cream);
-}
+.coupon-card:hover { box-shadow: var(--shadow-sm); }
+.coupon-card.inactive { opacity: 0.5; }
 
 .coupon-code {
-  font-weight: 600;
-  color: var(--brown);
-  font-family: var(--font-serif);
-  font-size: 16px;
+  font-family: monospace; font-size: 18px; font-weight: 700;
+  color: var(--brown); background: var(--cream-dark);
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  letter-spacing: 0.1em; white-space: nowrap; min-width: 140px; text-align: center;
 }
+.coupon-details { flex: 1; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--text-muted); }
+.coupon-value { font-weight: 600; color: var(--gold-dark); font-size: 15px; }
+.expired { color: var(--error); }
+.coupon-actions { display: flex; align-items: center; gap: 8px; }
 
-/* ── BUTONLAR VE DURUM ─────────────────────────────────── */
-.toggle-btn {
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 11px;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.toggle-btn.active {
-  background: var(--success);
-  color: var(--white);
-}
-
-.toggle-btn.passive {
-  background: var(--border-dark);
-  color: var(--text);
-}
-
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: var(--text-light);
-  font-size: 18px;
-  transition: color var(--transition);
-}
-
-.btn-delete:hover {
-  color: var(--error);
-}
-
-/* ── MOBİL UYUMLULUK ───────────────────────────────────── */
-@media (max-width: 992px) {
-  .coupon-thead {
-    display: none;
-  }
-  .coupon-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 16px;
-  }
+@media (max-width: 700px) {
+  .coupon-form { grid-template-columns: 1fr 1fr; }
+  .coupon-card { flex-wrap: wrap; }
 }

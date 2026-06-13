@@ -1,144 +1,157 @@
-import { useState, useEffect } from "react";
-import api from "../../services/api";
-import AdminLayout from "./AdminLayout";
-import { toast } from "react-toastify";
-import "./UpsellPage.css";
+import { useState, useEffect } from 'react';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import api from '../../services/api.js';
+import toast from 'react-hot-toast';
+import './UpsellPage.css';
 
-export default function UpsellPage() {
-  const [products, setProducts] = useState([]);
-  const [mainProduct, setMainProduct] = useState("");
-  const [suggestedProduct, setSuggestedProduct] = useState("");
-  const [upsells, setUpsells] = useState([]);
-  const [loading, setLoading] = useState(false);
+const emptyForm = { name: '', title: '', description: '', triggerProduct: '', triggerCategory: '', products: [], isActive: true };
 
-  useEffect(() => {
-    api
-      .get("/products?pageSize=1000")
-      .then((r) => setProducts(r.data.products || r.data))
-      .catch(() => toast.error("Ürünler yüklenemedi"));
-  }, []);
+const UpsellPage = () => {
+  const [upsells,    setUpsells]    = useState([]);
+  const [products,   setProducts]   = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [showForm,   setShowForm]   = useState(false);
+  const [form,       setForm]       = useState(emptyForm);
+  const [selectedProduct, setSelectedProduct] = useState('');
 
-  useEffect(() => {
-    if (!mainProduct) return setUpsells([]);
+  const fetchAll = async () => {
     setLoading(true);
-    api
-      .get(`/upsell/admin/${mainProduct}`)
-      .then((r) => setUpsells(r.data))
-      .catch(() => toast.error("Upsell'ler yüklenemedi"))
-      .finally(() => setLoading(false));
-  }, [mainProduct]);
-
-  const handleAdd = async () => {
-    if (!mainProduct || !suggestedProduct)
-      return toast.warn("Lütfen iki ürün de seçin");
-    if (mainProduct === suggestedProduct)
-      return toast.warn("Aynı ürünü seçemezsiniz");
     try {
-      await api.post("/upsell/admin", {
-        main_product_id: mainProduct,
-        suggested_product_id: suggestedProduct,
-      });
-      toast.success("Eklendi!");
-      setSuggestedProduct("");
-      const r = await api.get(`/upsell/admin/${mainProduct}`);
-      setUpsells(r.data);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Eklenemedi");
-    }
+      const [uRes, pRes, cRes] = await Promise.all([api.get('/upsell'), api.get('/products?limit=100'), api.get('/categories')]);
+      setUpsells(uRes.data);
+      setProducts(pRes.data.products);
+      setCategories(cRes.data);
+    } catch { toast.error('Yüklenemedi'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const addProduct = () => {
+    if (!selectedProduct) return;
+    const already = form.products.find(p => p.product === selectedProduct);
+    if (already) return toast.error('Bu ürün zaten ekli');
+    setForm(f => ({ ...f, products: [...f.products, { product: selectedProduct, specialPrice: '' }] }));
+    setSelectedProduct('');
+  };
+
+  const removeProduct = (id) => setForm(f => ({ ...f, products: f.products.filter(p => p.product !== id) }));
+
+  const updateSpecialPrice = (id, price) => setForm(f => ({ ...f, products: f.products.map(p => p.product === id ? { ...p, specialPrice: price } : p) }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...form, products: form.products.map(p => ({ product: p.product, specialPrice: p.specialPrice ? Number(p.specialPrice) : undefined })) };
+      if (!payload.triggerProduct)  delete payload.triggerProduct;
+      if (!payload.triggerCategory) delete payload.triggerCategory;
+      await api.post('/upsell', payload);
+      toast.success('Upsell oluşturuldu');
+      setShowForm(false); setForm(emptyForm);
+      fetchAll();
+    } catch (err) { toast.error(err.response?.data?.message || 'Hata'); }
   };
 
   const handleDelete = async (id) => {
-    try {
-      await api.delete(`/upsell/admin/${id}`);
-      setUpsells((prev) => prev.filter((u) => u._id !== id));
-      toast.success("Silindi");
-    } catch {
-      toast.error("Silinemedi");
-    }
+    if (!confirm('Silmek istediğinizden emin misiniz?')) return;
+    try { await api.delete(`/upsell/${id}`); toast.success('Silindi'); fetchAll(); }
+    catch { toast.error('Hata'); }
   };
 
-  return (
-    <AdminLayout title="🎁 Kasa Önü Ürünleri">
-      <div className="upsell-admin">
-        <div className="upsell-form card">
-          <h3>Yeni Öneri Ekle</h3>
-          <div className="upsell-selects">
-            <div className="form-group">
-              <label>Ana Ürün (sepete eklenince...)</label>
-              <select
-                value={mainProduct}
-                onChange={(e) => setMainProduct(e.target.value)}
-              >
-                <option value="">— Ürün seçin —</option>
-                {products.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <span className="upsell-arrow">→</span>
-            <div className="form-group">
-              <label>Önerilecek Ürün</label>
-              <select
-                value={suggestedProduct}
-                onChange={(e) => setSuggestedProduct(e.target.value)}
-              >
-                <option value="">— Ürün seçin —</option>
-                {products
-                  .filter((p) => p._id !== mainProduct)
-                  .map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-          <button className="btn-primary" onClick={handleAdd}>
-            + Ekle
-          </button>
-        </div>
+  const getProductName = (id) => products.find(p => p._id === id)?.name || id;
 
-        {mainProduct && (
-          <div className="upsell-list card">
-            <h3>
-              Mevcut Öneriler —{" "}
-              <em>{products.find((p) => p._id === mainProduct)?.name}</em>
-            </h3>
-            {loading ? (
-              <p className="loading-text">Yükleniyor...</p>
-            ) : upsells.length === 0 ? (
-              <p className="empty-text">Henüz öneri eklenmemiş.</p>
-            ) : (
-              <div className="upsell-table">
-                {upsells.map((u, i) => (
-                  <div className="upsell-row" key={u._id}>
-                    <span className="upsell-order">#{i + 1}</span>
-                    <img
-                      src={u.suggestedProduct.image || "/placeholder.png"}
-                      alt={u.suggestedProduct.name}
-                      className="upsell-thumb"
-                    />
-                    <span className="upsell-name">
-                      {u.suggestedProduct.name}
-                    </span>
-                    <span className="upsell-price">
-                      {Number(u.suggestedProduct.price).toFixed(2)} ₺
-                    </span>
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDelete(u._id)}
-                    >
-                      🗑 Sil
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 className="admin-page-title" style={{ marginBottom: 0 }}>Upsell Yönetimi</h1>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(p => !p)}><FiPlus /> Yeni Upsell</button>
       </div>
-    </AdminLayout>
+
+      {showForm && (
+        <div className="admin-card" style={{ marginBottom: 28 }}>
+          <h3 style={{ fontSize: 16, color: 'var(--brown)', marginBottom: 20 }}>Yeni Upsell Oluştur</h3>
+          <form onSubmit={handleSubmit} className="upsell-form">
+            <div className="form-group"><label>İsim (dahili)</label><input className="form-control" value={form.name} onChange={set('name')} required /></div>
+            <div className="form-group"><label>Başlık (müşteriye gösterilir)</label><input className="form-control" placeholder="Bununla birlikte alın" value={form.title} onChange={set('title')} /></div>
+            <div className="form-group" style={{ gridColumn: '1/-1' }}><label>Açıklama</label><input className="form-control" value={form.description} onChange={set('description')} /></div>
+
+            <div className="form-group">
+              <label>Tetikleyici Ürün <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(boş = herkese göster)</span></label>
+              <select className="form-control" value={form.triggerProduct} onChange={set('triggerProduct')}>
+                <option value="">Tümü</option>
+                {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Tetikleyici Kategori</label>
+              <select className="form-control" value={form.triggerCategory} onChange={set('triggerCategory')}>
+                <option value="">Tümü</option>
+                {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1/-1' }}>
+              <label>Önerilen Ürünler</label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <select className="form-control" value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)}>
+                  <option value="">Ürün seçin...</option>
+                  {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+                </select>
+                <button type="button" className="btn btn-dark btn-sm" onClick={addProduct}><FiPlus /> Ekle</button>
+              </div>
+              {form.products.length > 0 && (
+                <div className="upsell-product-list">
+                  {form.products.map(p => (
+                    <div key={p.product} className="upsell-product-item">
+                      <span>{getProductName(p.product)}</span>
+                      <input className="form-control" type="number" placeholder="Özel fiyat (₺)" value={p.specialPrice} onChange={e => updateSpecialPrice(p.product, e.target.value)} style={{ width: 160 }} />
+                      <button type="button" className="btn-icon danger" onClick={() => removeProduct(p.product)}><FiTrash2 /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ gridColumn: '1/-1', display: 'flex', gap: 12 }}>
+              <button type="submit" className="btn btn-primary">Oluştur</button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>İptal</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {loading ? <div className="spinner" /> : (
+        <div className="upsell-cards">
+          {upsells.map(u => (
+            <div key={u._id} className="upsell-card">
+              <div className="upsell-card-header">
+                <div>
+                  <strong>{u.name}</strong>
+                  {u.title && <p>{u.title}</p>}
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: u.isActive ? '#d4edda' : '#fde8e8', color: u.isActive ? 'var(--success)' : 'var(--error)' }}>{u.isActive ? 'Aktif' : 'Pasif'}</span>
+                  <button className="btn-icon danger" onClick={() => handleDelete(u._id)}><FiTrash2 /></button>
+                </div>
+              </div>
+              <div className="upsell-card-body">
+                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {u.products?.length} ürün önerisi
+                  {u.triggerProduct ? ' · Belirli ürün' : ''}
+                  {u.triggerCategory ? ' · Belirli kategori' : ''}
+                  {!u.triggerProduct && !u.triggerCategory ? ' · Herkese göster' : ''}
+                </p>
+              </div>
+            </div>
+          ))}
+          {upsells.length === 0 && <div className="empty-state"><h3>Henüz upsell yok</h3></div>}
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default UpsellPage;

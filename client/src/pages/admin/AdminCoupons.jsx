@@ -1,197 +1,128 @@
-import { useState, useEffect } from "react";
-import api from "../../services/api";
-import AdminLayout from "./AdminLayout";
-import { toast } from "react-toastify";
-import "./AdminCoupons.css";
+import { useState, useEffect } from 'react';
+import { FiPlus, FiTrash2, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import api from '../../services/api.js';
+import toast from 'react-hot-toast';
+import './AdminCoupons.css';
 
-export default function CouponPage() {
-  const [coupons, setCoupons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    code: "",
-    discountPercent: 10,
-    minQuantity: 20,
-    expiresAt: "",
-    usageLimit: "",
-  });
+const emptyForm = { code: '', type: 'percentage', discount: '', minOrderAmount: 0, maxUses: '', expiresAt: '', isActive: true };
 
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
+const AdminCoupons = () => {
+  const [coupons,  setCoupons]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form,     setForm]     = useState(emptyForm);
 
   const fetchCoupons = async () => {
-    try {
-      const { data } = await api.get("/coupons");
-      setCoupons(data);
-    } catch {
-      toast.error("Kuponlar yüklenemedi");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    try { const { data } = await api.get('/coupons'); setCoupons(data); }
+    catch { toast.error('Yüklenemedi'); }
+    finally { setLoading(false); }
   };
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => { fetchCoupons(); }, []);
 
-  const handleCreate = async () => {
-    if (!form.code || !form.discountPercent)
-      return toast.warn("Kod ve indirim oranı zorunlu");
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await api.post("/coupons", {
-        ...form,
-        discountPercent: Number(form.discountPercent),
-        minQuantity: Number(form.minQuantity),
-        usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
-        expiresAt: form.expiresAt || null,
-      });
-      toast.success("Kupon oluşturuldu!");
-      setForm({
-        code: "",
-        discountPercent: 10,
-        minQuantity: 20,
-        expiresAt: "",
-        usageLimit: "",
-      });
+      await api.post('/coupons', { ...form, discount: Number(form.discount), minOrderAmount: Number(form.minOrderAmount), maxUses: form.maxUses ? Number(form.maxUses) : null });
+      toast.success('Kupon oluşturuldu');
+      setShowForm(false); setForm(emptyForm);
       fetchCoupons();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Oluşturulamadı");
-    }
+    } catch (err) { toast.error(err.response?.data?.message || 'Hata'); }
+  };
+
+  const handleToggle = async (coupon) => {
+    try {
+      await api.put(`/coupons/${coupon._id}`, { isActive: !coupon.isActive });
+      toast.success(coupon.isActive ? 'Kupon devre dışı bırakıldı' : 'Kupon aktifleştirildi');
+      fetchCoupons();
+    } catch { toast.error('Hata'); }
   };
 
   const handleDelete = async (id) => {
-    try {
-      await api.delete(`/coupons/${id}`);
-      setCoupons((prev) => prev.filter((c) => c._id !== id));
-      toast.success("Silindi");
-    } catch {
-      toast.error("Silinemedi");
-    }
-  };
-
-  const handleToggle = async (id) => {
-    try {
-      const { data } = await api.patch(`/coupons/${id}/toggle`);
-      setCoupons((prev) => prev.map((c) => (c._id === id ? data : c)));
-    } catch {
-      toast.error("Güncellenemedi");
-    }
+    if (!confirm('Kuponu silmek istediğinizden emin misiniz?')) return;
+    try { await api.delete(`/coupons/${id}`); toast.success('Silindi'); fetchCoupons(); }
+    catch { toast.error('Silinemedi'); }
   };
 
   return (
-    <AdminLayout title="🎟 Kupon Yönetimi">
-      <div className="coupon-admin">
-        <div className="coupon-form card">
-          <h3>Yeni Kupon Oluştur</h3>
-          <div className="coupon-fields">
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 className="admin-page-title" style={{ marginBottom: 0 }}>Kuponlar</h1>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(p => !p)}>
+          <FiPlus /> Yeni Kupon
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="admin-card" style={{ marginBottom: 28 }}>
+          <h3 style={{ fontSize: 16, color: 'var(--brown)', marginBottom: 20 }}>Yeni Kupon Oluştur</h3>
+          <form onSubmit={handleSubmit} className="coupon-form">
             <div className="form-group">
               <label>Kupon Kodu</label>
-              <input
-                name="code"
-                value={form.code}
-                onChange={handleChange}
-                placeholder="KOVAN10"
-                style={{ textTransform: "uppercase" }}
-              />
+              <input className="form-control" placeholder="YAZA2025" value={form.code} onChange={set('code')} required style={{ textTransform: 'uppercase' }} />
             </div>
             <div className="form-group">
-              <label>İndirim (%)</label>
-              <input
-                name="discountPercent"
-                type="number"
-                min="1"
-                max="100"
-                value={form.discountPercent}
-                onChange={handleChange}
-              />
+              <label>İndirim Türü</label>
+              <select className="form-control" value={form.type} onChange={set('type')}>
+                <option value="percentage">Yüzde (%)</option>
+                <option value="fixed">Sabit Tutar (₺)</option>
+              </select>
             </div>
             <div className="form-group">
-              <label>Min. Ürün Adedi</label>
-              <input
-                name="minQuantity"
-                type="number"
-                min="1"
-                value={form.minQuantity}
-                onChange={handleChange}
-              />
+              <label>İndirim {form.type === 'percentage' ? '(%)' : '(₺)'}</label>
+              <input className="form-control" type="number" value={form.discount} onChange={set('discount')} required min={1} max={form.type === 'percentage' ? 100 : undefined} />
+            </div>
+            <div className="form-group">
+              <label>Min. Sipariş Tutarı (₺)</label>
+              <input className="form-control" type="number" value={form.minOrderAmount} onChange={set('minOrderAmount')} />
+            </div>
+            <div className="form-group">
+              <label>Maks. Kullanım (boş = sınırsız)</label>
+              <input className="form-control" type="number" value={form.maxUses} onChange={set('maxUses')} placeholder="Sınırsız" />
             </div>
             <div className="form-group">
               <label>Son Kullanma Tarihi</label>
-              <input
-                name="expiresAt"
-                type="date"
-                value={form.expiresAt}
-                onChange={handleChange}
-              />
+              <input className="form-control" type="date" value={form.expiresAt} onChange={set('expiresAt')} required />
             </div>
-            <div className="form-group">
-              <label>Kullanım Limiti</label>
-              <input
-                name="usageLimit"
-                type="number"
-                min="1"
-                value={form.usageLimit}
-                onChange={handleChange}
-                placeholder="Sınırsız"
-              />
+            <div style={{ gridColumn: '1/-1', display: 'flex', gap: 12 }}>
+              <button type="submit" className="btn btn-primary">Kupon Oluştur</button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>İptal</button>
             </div>
-          </div>
-          <button className="btn-primary" onClick={handleCreate}>
-            + Kupon Oluştur
-          </button>
+          </form>
         </div>
+      )}
 
-        <div className="coupon-list card">
-          <h3>Mevcut Kuponlar</h3>
-          {loading ? (
-            <p className="loading-text">Yükleniyor...</p>
-          ) : coupons.length === 0 ? (
-            <p className="empty-text">Henüz kupon eklenmemiş.</p>
-          ) : (
-            <div className="coupon-table">
-              <div className="coupon-thead">
-                <span>Kod</span>
-                <span>İndirim</span>
-                <span>Min. Adet</span>
-                <span>Kullanım</span>
-                <span>Son Tarih</span>
-                <span>Durum</span>
-                <span></span>
+      <div className="coupon-list">
+        {loading ? <div className="spinner" /> : coupons.map(coupon => {
+          const expired = new Date(coupon.expiresAt) < new Date();
+          return (
+            <div key={coupon._id} className={`coupon-card${!coupon.isActive || expired ? ' inactive' : ''}`}>
+              <div className="coupon-code">{coupon.code}</div>
+              <div className="coupon-details">
+                <span className="coupon-value">
+                  {coupon.type === 'percentage' ? `%${coupon.discount}` : `₺${coupon.discount}`} indirim
+                </span>
+                {coupon.minOrderAmount > 0 && <span>Min. ₺{coupon.minOrderAmount}</span>}
+                <span>{coupon.usedCount}{coupon.maxUses ? `/${coupon.maxUses}` : ''} kullanım</span>
+                <span className={expired ? 'expired' : ''}>
+                  {expired ? '⚠️ Süresi doldu' : `Son: ${new Date(coupon.expiresAt).toLocaleDateString('tr-TR')}`}
+                </span>
               </div>
-              {coupons.map((c) => (
-                <div className="coupon-row" key={c._id}>
-                  <span className="coupon-code">{c.code}</span>
-                  <span>%{c.discountPercent}</span>
-                  <span>{c.minQuantity} adet</span>
-                  <span>
-                    {c.usageCount}/{c.usageLimit ?? "∞"}
-                  </span>
-                  <span>
-                    {c.expiresAt
-                      ? new Date(c.expiresAt).toLocaleDateString("tr-TR")
-                      : "—"}
-                  </span>
-                  <span>
-                    <button
-                      className={`toggle-btn ${c.isActive ? "active" : "passive"}`}
-                      onClick={() => handleToggle(c._id)}
-                    >
-                      {c.isActive ? "Aktif" : "Pasif"}
-                    </button>
-                  </span>
-                  <span>
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDelete(c._id)}
-                    >
-                      🗑
-                    </button>
-                  </span>
-                </div>
-              ))}
+              <div className="coupon-actions">
+                <button className="btn-icon" onClick={() => handleToggle(coupon)} title={coupon.isActive ? 'Devre dışı bırak' : 'Aktifleştir'}>
+                  {coupon.isActive ? <FiToggleRight style={{ color: 'var(--success)' }} size={20} /> : <FiToggleLeft size={20} />}
+                </button>
+                <button className="btn-icon danger" onClick={() => handleDelete(coupon._id)}><FiTrash2 /></button>
+              </div>
             </div>
-          )}
-        </div>
+          );
+        })}
       </div>
-    </AdminLayout>
+    </div>
   );
-}
+};
+
+export default AdminCoupons;

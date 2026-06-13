@@ -1,113 +1,17 @@
-/* ── UPSELL YÖNETİMİ ÖZEL STİLLERİ ──────────────────────── */
-.upsell-admin {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+.upsell-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.upsell-product-list { display: flex; flex-direction: column; gap: 8px; }
+.upsell-product-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--cream); padding: 10px 14px;
+  border-radius: var(--radius-sm); font-size: 13px;
 }
+.upsell-product-item span { flex: 1; color: var(--text); }
 
-.upsell-form {
-  padding: 24px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
+.upsell-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.upsell-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.upsell-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 18px 12px; }
+.upsell-card-header strong { font-size: 15px; color: var(--brown); display: block; margin-bottom: 3px; }
+.upsell-card-header p { font-size: 12px; color: var(--text-muted); }
+.upsell-card-body { padding: 0 18px 16px; border-top: 1px solid var(--border); padding-top: 12px; }
 
-.upsell-selects {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  margin: 20px 0;
-}
-
-.upsell-selects .form-group {
-  flex: 1;
-}
-
-.upsell-arrow {
-  margin-bottom: 12px;
-  color: var(--gold);
-  font-weight: bold;
-  font-size: 20px;
-}
-
-/* ── TABLO GÖRÜNÜMÜ ────────────────────────────────────── */
-.upsell-list {
-  background: var(--white);
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.upsell-table {
-  margin-top: 20px;
-}
-
-.upsell-row {
-  display: grid;
-  grid-template-columns: 50px 60px 1fr 100px 80px;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 16px;
-  border-bottom: 1px solid var(--border);
-  transition: var(--transition);
-}
-
-.upsell-row:hover {
-  background: var(--cream);
-}
-
-.upsell-thumb {
-  width: 45px;
-  height: 45px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-}
-
-.upsell-name {
-  font-weight: 500;
-  color: var(--text);
-}
-
-.upsell-price {
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.upsell-order {
-  font-size: 12px;
-  color: var(--text-light);
-}
-
-/* ── BUTONLAR ──────────────────────────────────────────── */
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: var(--text-light);
-  font-size: 13px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-delete:hover {
-  color: var(--error);
-}
-
-/* ── MOBİL UYUMLULUK ───────────────────────────────────── */
-@media (max-width: 768px) {
-  .upsell-selects {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .upsell-arrow {
-    text-align: center;
-    transform: rotate(90deg);
-    margin: 10px 0;
-  }
-  .upsell-row {
-    grid-template-columns: 40px 1fr 80px;
-  }
-  .upsell-thumb,
-  .upsell-order {
-    display: none;
-  }
-}
+@media (max-width: 600px) { .upsell-form { grid-template-columns: 1fr; } }
