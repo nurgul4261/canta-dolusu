@@ -1,0 +1,113 @@
+/* ── KUPON YÖNETİMİ ÖZEL STİLLERİ ──────────────────────── */
+.coupon-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.coupon-form {
+  padding: 24px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.coupon-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+/* ── KUPON TABLOSU ─────────────────────────────────────── */
+.coupon-list {
+  background: var(--white);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.coupon-table {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.coupon-thead,
+.coupon-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr 1.2fr 1fr 0.5fr;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.coupon-thead {
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+.coupon-row {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+.coupon-row:hover {
+  background: var(--cream);
+}
+
+.coupon-code {
+  font-weight: 600;
+  color: var(--brown);
+  font-family: var(--font-serif);
+  font-size: 16px;
+}
+
+/* ── BUTONLAR VE DURUM ─────────────────────────────────── */
+.toggle-btn {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle-btn.active {
+  background: var(--success);
+  color: var(--white);
+}
+
+.toggle-btn.passive {
+  background: var(--border-dark);
+  color: var(--text);
+}
+
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  font-size: 18px;
+  transition: color var(--transition);
+}
+
+.btn-delete:hover {
+  color: var(--error);
+}
+
+/* ── MOBİL UYUMLULUK ───────────────────────────────────── */
+@media (max-width: 992px) {
+  .coupon-thead {
+    display: none;
+  }
+  .coupon-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px;
+  }
+}

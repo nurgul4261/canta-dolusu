@@ -1,0 +1,119 @@
+.footer {
+  background: var(--brown);
+  color: var(--cream);
+  margin-top: auto;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  padding: 60px 20px 40px;
+}
+
+/* Marka */
+.footer-logo {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--gold-light);
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.footer-logo span { color: var(--powder); }
+
+.footer-brand p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(250,246,241,0.7);
+  max-width: 260px;
+}
+
+.footer-social {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+.footer-social a {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(250,246,241,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(250,246,241,0.7);
+  font-size: 16px;
+  transition: var(--transition);
+}
+.footer-social a:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--white);
+}
+
+/* Kolonlar */
+.footer-col h4 {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gold-light);
+  margin-bottom: 18px;
+  letter-spacing: 0.04em;
+}
+.footer-col ul { display: flex; flex-direction: column; gap: 10px; }
+.footer-col ul li a,
+.footer-col ul li {
+  font-size: 13px;
+  color: rgba(250,246,241,0.65);
+  transition: color var(--transition);
+}
+.footer-col ul li a:hover { color: var(--gold-light); }
+
+.footer-contact li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-contact svg { flex-shrink: 0; color: var(--gold); }
+
+/* Alt çizgi */
+.footer-bottom {
+  border-top: 1px solid rgba(250,246,241,0.1);
+}
+.footer-bottom-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-bottom p {
+  font-size: 12px;
+  color: rgba(250,246,241,0.45);
+}
+.footer-payment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: rgba(250,246,241,0.45);
+}
+.payment-badge {
+  background: rgba(250,246,241,0.07);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .footer-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 500px) {
+  .footer-inner { grid-template-columns: 1fr; }
+  .footer-bottom-inner { flex-direction: column; text-align: center; }
+}
